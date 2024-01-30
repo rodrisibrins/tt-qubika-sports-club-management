@@ -1,4 +1,7 @@
 import { test, expect, request } from '@playwright/test';
+import {NavigationPage} from '../page-objects/navigationPage'
+import {CategoryPage} from '../page-objects/categoryPage'
+
 
 let randomEmail : string;
 
@@ -22,6 +25,10 @@ test.describe('create new user through API & create new category', () => {
   });
 
   test('post new user data', async ({ page, request }) => {
+    const navigateTo = new NavigationPage(page)
+    const categoryPage = new CategoryPage(page)
+
+
     const response = await request.post('https://api.club-administration.qa.qubika.com/api/auth/register', {
       data: {
         "email": `${randomEmail}`,
@@ -49,9 +56,7 @@ test.describe('create new user through API & create new category', () => {
     });
 
     await test.step('login with the new user', async () => {
-      await page.locator('input[placeholder="Usuario o correo electrónico"]').fill(userEmail);
-      await page.locator('input[placeholder="Contraseña"]').fill(userPassword);
-      await page.locator(':text-is("Autenticar")').click();
+      await navigateTo.userLogin(userEmail, userPassword);
     });
 
     await test.step('check user is navigated to dashboard page', async () => {
@@ -62,43 +67,23 @@ test.describe('create new user through API & create new category', () => {
     });
 
     await test.step('navigate to category page', async () => {
-      await page.locator(':text-is(" Tipos de Categorias ")').click()
-      await page.waitForURL('https://club-administration.qa.qubika.com/#/category-type');
-      await expect(page).toHaveURL(/category-type/);
-      await expect(page.locator(':text-is("Tipos de categorías")')).toBeInViewport();
+      await navigateTo.categoryPage();
     });
 
     await test.step('create a new category', async () => {
-      await page.locator(':text-is("Adicionar")').click()
-      await expect(page.locator(':text-is("Adicionar tipo de categoría")')).toBeInViewport();
-      await page.locator('input[placeholder="Nombre de categoría"]').fill("Test Category");
-      await page.locator(':text-is("Aceptar")').click()
-      await expect(page.locator('#toast-container')).toBeInViewport();
-      await expect(page.locator('#toast-container')).toHaveText("Tipo de categoría adicionada satisfactoriamente");
+      await categoryPage.createCategory();
     });
 
     await test.step('check Test Category was created', async () => {
-      await page.locator('.card-footer ul li:nth-last-child(2)').click()
-      await expect(page.locator('tbody tr:last-child td:first-child')).toHaveText("Test Category");
-      await expect(page.locator('tbody tr:last-child td:nth-last-child(2)')).toBeEmpty();
+      await categoryPage.validateCategory();
     });
 
     await test.step('create sub category', async () => {
-      await page.locator(':text-is("Adicionar")').click()
-      await expect(page.locator(':text-is("Adicionar tipo de categoría")')).toBeInViewport();
-      await page.locator('input[placeholder="Nombre de categoría"]').fill("Child Test Category");
-      await page.getByRole('checkbox', {name: "Es subcategoria?"}).click({force: true})
-      await page.locator('.ng-arrow-wrapper:last-child').click();
-      await page.getByLabel('Options list').locator('div').filter({ hasText: 'Test Category' }).last().click()
-      await page.locator(':text-is("Aceptar")').click()
-      await expect(page.locator('#toast-container')).toBeInViewport();
-      await expect(page.locator('#toast-container')).toHaveText("Tipo de categoría adicionada satisfactoriamente");
+      await categoryPage.createSubCategory();
     });
 
     await test.step('check Child Test Category was created', async () => {
-      await page.locator('.card-footer ul li:nth-last-child(2)').click()
-      await expect(page.locator('tbody tr:last-child td:first-child')).toHaveText("Child Test Category");
-      await expect(page.locator('tbody tr:last-child td:nth-last-child(2)')).toHaveText("Test Category");
+      await categoryPage.validateSubCategory();
     });
 
   });
