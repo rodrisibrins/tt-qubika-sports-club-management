@@ -40,6 +40,7 @@ export class CategoryPage {
 
     async validateCategory(){
         await this.footerPage.click();
+        await this.page.waitForTimeout(1000);
         await expect(this.nameColumn).toHaveText("Test Category");
         await expect(this.parentCategoryColumn).toBeEmpty();
     }
@@ -59,6 +60,7 @@ export class CategoryPage {
     async validateSubCategory(){
         await this.page.waitForTimeout(1000);
         await this.footerPage.click();
+        await this.page.waitForTimeout(1000);
         await expect(this.nameColumn).toHaveText("Child Test Category");
         await expect(this.parentCategoryColumn).toHaveText("Test Category");
     }
